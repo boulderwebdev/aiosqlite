@@ -11,6 +11,9 @@ setup:
 dev:
 	flit install --symlink
 
+dev[pysqlite3]:
+	flit install --symlink --extras pysqlite3
+
 release: lint test clean
 	flit publish
 

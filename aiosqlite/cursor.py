@@ -1,7 +1,11 @@
 # Copyright 2018 John Reese
 # Licensed under the MIT license
 
-import sqlite3
+try:
+    from pysqlite3 import dbapi2 as sqlite3
+except ImportError:
+    import sqlite3  # type: ignore
+
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterable, Optional, Tuple
 
 if TYPE_CHECKING:

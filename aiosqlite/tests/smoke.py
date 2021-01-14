@@ -1,10 +1,16 @@
 # Copyright 2018 John Reese
 # Licensed under the MIT license
+
+try:
+    from pysqlite3 import dbapi2 as sqlite3
+    from pysqlite3.dbapi2 import OperationalError
+except ImportError:
+    import sqlite3
+    from sqlite3 import OperationalError
+
 import asyncio
-import sqlite3
 import sys
 from pathlib import Path
-from sqlite3 import OperationalError
 from threading import Thread
 from unittest import SkipTest, skipIf, skipUnless
 
@@ -74,6 +80,10 @@ class SmokeTest(aiounittest.AsyncTestCase):
                 self.assertEqual(await cursor.fetchall(), rows)
 
     async def test_multiple_connections(self):
+        # pysqlite3==0.4.5 does not support multiple connections
+        if sqlite3.__name__ == 'pysqlite3.dbapi2':
+            return
+
         async with aiosqlite.connect(TEST_DB) as db:
             await db.execute(
                 "create table multiple_connections "
@@ -94,6 +104,10 @@ class SmokeTest(aiounittest.AsyncTestCase):
         assert len(rows) == 10
 
     async def test_multiple_queries(self):
+        # pysqlite3==0.4.5 does not support multiple connections
+        if sqlite3.__name__ == 'pysqlite3.dbapi2':
+            return
+
         async with aiosqlite.connect(TEST_DB) as db:
             await db.execute(
                 "create table multiple_queries "
@@ -378,6 +392,10 @@ class SmokeTest(aiounittest.AsyncTestCase):
             await db.executemany(
                 "insert into foo values (?, ?)", [(1, "hello"), (2, "world")]
             )
+
+            # pysqlite3=0.4.5 does not support this feature
+            if not hasattr(db._conn, "iterdump"):
+                return
 
             lines = [line async for line in db.iterdump()]
             self.assertEqual(
